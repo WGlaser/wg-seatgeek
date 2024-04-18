@@ -1,75 +1,61 @@
-definitions:
-  work_pools:
-    central-push-pool: &central-push-pool
-      name: central-push-pool
-      job_variables:
-        image: us-central1-docker.pkg.dev/wade-prefect/prefect-images/prefect-flows/wg-seatgeek
-        memory: 1024Mi
-  actions:
-    build:
-      - prefect.deployments.steps.run_shell_script:
-          id: get-commit-hash
-          script: git rev-parse --short HEAD
-          stream_output: false
-      - prefect_docker.deployments.steps.build_docker_image:
-          id: build-image
-          requires: prefect-docker
-          image_name: us-central1-docker.pkg.dev/wade-prefect/prefect-images/prefect-flows/wg-seatgeek
-          tag: "{{ get-commit-hash.stdout }}"
-          dockerfile: Dockerfile
-          platform: linux/amd64
-          buildargs:
-            AUTHED_ARTIFACT_REG_URL: https://_json_key_base64:{{ $secrets.CENTRAL_INFRA_SA_JSON_64 }}@uus-central1-python.pkg.dev/wade-prefect/private-packages/simple/
-      - prefect_docker.deployments.steps.build_docker_image:
-          id: build-image-latest
-          requires: prefect-docker
-          image_name: us-central1-docker.pkg.dev/wade-prefect/prefect-images/prefect-flows/wg-seatgeek
-          tag: latest
-          dockerfile: Dockerfile
-          platform: linux/amd64
-          buildargs:
-            AUTHED_ARTIFACT_REG_URL: https://_json_key_base64:{{ $secrets.CENTRAL_INFRA_SA_JSON_64 }}@us-central1-python.pkg.dev/wade-prefect/private-packages/simple/
-    push:
-      - prefect_docker.deployments.steps.push_docker_image:
-          requires: prefect-docker
-          image_name: "{{build-image.image_name}}"
-          tag: "{{ build-image.tag }}"
-      - prefect_docker.deployments.steps.push_docker_image:
-          requires: prefect-docker
-          image_name: "{{build-image.image_name}}"
-          tag: latest
-    pull:
-      - prefect.deployments.steps.git_clone:
-          repository: https://github.com/WGlaser/wg-seatgeek.git
-          branch: main
-          credentials: "{{ prefect.blocks.github-credentials.wg-github-credentials }}"
-  deployments:
-  - name: wg-seatgeek-celtics
-    tags: [seatgeek, celtics]
-    entrypoint: wg_seatgeek/wg_seatseek.py:wg_seatgeek
-    parameters:
-      team: Boston-Celtics
-    work_pool: *central-push-pool
-
-  - name: wg-seatgeek-nuggets
-    tags: [seatgeek, nuggets]
-    entrypoint: wg_seatgeek/wg_seatseek.py:wg_seatgeek
-    parameters:
-      team: Denver-Nuggets
-    work_pool: *central-push-pool
-
-# Generic metadata about this project
-name: wg_seatgeek
 prefect-version: 2.17
+name: wg_seatgeek
 
-# build section allows you to manage and build docker images
+work_pools:
+  central-push-pool: &central-push-pool
+    name: central-push-pool
+    job_variables:
+      image: us-central1-docker.pkg.dev/wade-prefect/prefect-images/prefect-flows/wg-seatgeek
+      memory: 1024Mi
+
 build:
-
-# push section allows you to manage if and how this project is uploaded to remote locations
+  - prefect.deployments.steps.run_shell_script:
+      id: get-commit-hash
+      script: git rev-parse --short HEAD
+      stream_output: false
+  - prefect_docker.deployments.steps.build_docker_image:
+      id: build-image
+      requires: prefect-docker
+      image_name: us-central1-docker.pkg.dev/wade-prefect/prefect-images/prefect-flows/wg-seatgeek
+      tag: "{{ get-commit-hash.stdout }}"
+      dockerfile: Dockerfile
+      platform: linux/amd64
+      buildargs:
+        AUTHED_ARTIFACT_REG_URL: https://_json_key_base64:ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAid2FkZS1wcmVmZWN0IiwKICAicHJpdmF0ZV9rZXlfaWQiOiAiZjQyMDVkYmQzYmM3NjgwZDlmOGJhNTFhZmFhOWJiOGZjODQ2ODYwZCIsCiAgInByaXZhdGVfa2V5IjogIi0tLS0tQkVHSU4gUFJJVkFURSBLRVktLS0tLVxuTUlJRXZBSUJBREFOQmdrcWhraUc5dzBCQVFFRkFBU0NCS1l3Z2dTaUFnRUFBb0lCQVFDaENRRTZIUjZpM2d5T1xuMkYyVjJPcXVNdUFxVklWTnAwVCsyUWlpdTVsMDdITXdEdU1Sdmc2NUkya04wMGhQdU91M0xsUjFCNTRaaDZDVVxubVJUVFRBekN4Um5pWXhrbFk3YXFiVk5ZUWFpckt1ZUMwKzlDNnh0UTZmVGtOdjUzN0NsUVI4aC9BM21CdU1JbVxuNU94TFlaODE4WTg0WFJwQVhQdHlPYjZaeFFFb2VucHFWV1RJWHh0dmZMWG5PNlgxYjlVUnczQ2czWGZiRjBZclxuSVQ5TU5NalJ6UkJaMy9ZQ0lqQXdXYy82Q0pHQkMyRVAxWWFHRVhzMFdSSnMwc2Q0Q0hCTnJWTUdqdHk4WUtLc1xuVUxjTm9mSEI5UjQ5V096RzEvZDRaRm9PaFZ0RVNvK2hZZjRjemJpdGVncnZrSThrRDcwdjlBbGVmL0owdkxrOFxuRXM3TEs5YVZBZ01CQUFFQ2dnRUFIdmRtMDRDSEJDV3ovNElPMlFKcCtvNlErY0xnRVhNeGV0cE1aVkt5NnorT1xuMVBaLzVza0g5c1VlN2dncmx4MEZ3dWQzV1R2YVJLbUdrUnl3MndMOFR6WHN5Tkpxb3Z4K1ExNmJrTlNyZFNMZVxuZXhON0pvQ2tjNVpSdjlMdGN5MG9NcVpqSVQyUFQ0a3lXSjFiN1JEOE56alk1Q3RQSVlKZjNmTEp1ck1lQ21UWVxuNnpVUmZVWXRZZGpINTl1MGN5ZlRHOENNL0ZUaXB2WjBVSWNBTXd3NlRWYS85bVhrdlc4VXZlR3FZbHdoeGx5V1xuL2k4b3VtOHFBNlFaRHA3K3ZvblpRZHJKVS91RVdtSWUzVHNaWDRvVDh4NGV3TFNwRG5manRCTHlhSHRHSS8vZFxuUFU2QThFV3RrWVpGT0ZTdjVMVFhHdGdUREJCVG9MbGl2VzhGM0c4Qy93S0JnUURQY3VaaytldXVRSXhoc2o1MFxua0ljeitpbkdpMUJkclVZck13bmMxaFN2RUZHQzhaYTU5b2dITVVCejVBZkNNMXQ1KzRLQ2dBampjVTFpTzJNMVxuM3pzQXRjZGt3cmZTanRJL3MrMmFFdzdnUVgxK3ZINXFGSHYwTXN2Wi90aEtGQjJaTFAxVE5BYVVIZGhkKzBTZ1xuNHhNNVEwQWNwQm85VFJJZGFUNFk0R0hXb3dLQmdRREd1VVpXZ2VMYzRGS1BQc0h1c3FjYzg2Y0VBUVJWRDM4eVxuS3R1OVlpTngrY1VrVFh4RTdRRHVzQUszQ2UvSXphVG42QnZvTzU5aFpaODE1RU9YeUJtMDh3M0ZsUGIvQWZHY1xuMktOVS9ZTEJ4SVFPdVJBRlhEaXZLak15a1NQV1dFT2JlajBTWHNHRTdJSUFndk1WMk0zaEtOWk1HTXZld1gxWFxuUjVFY2w1NUpad0tCZ0NseHRnKzBVbDUwck5jVHlpQjFnMTFoL0JpYldvbnNoUms2VUIwYmMvUnBtUzlFM3F6MlxuVU1USEZTNVIveTdRSGRWbjV2SDFiRkVzSUo2Z2FMaXBpVnNoOWR6dWZkVUdEWUVHakZCOHdEc1RPbVFvZWtUdFxuSkxwcnI0ZzB2cmRGLzRmTGtpeWVOelkrSkN6YWR5S0JXeVRVaDZseEs0RFZ0ZW5FVGRDZ2UwdHJBb0dBREZCY1xud0cySi9qL1VQZFlZdEU3VHRpS08vZHVHUmpNUW9hNHdNWnNNTVRyVjhYcnZzV0d5UmhnWUF2bVZweTYvQWpQS1xuenVncTV5RWg3WGY0akVZMCtaWjZDdjFCRk9vczY1Z3MvczQ2dFFFVlljZ3I2dmtjOWhXNldHN1A5cTgvZVRub1xuNE9PSVFGRmJlT2FrWTMwc3ZNQUlEMjBWN1BhMmFwc2ZyZExqVnc4Q2dZQmdPdlFMbFdmeG1ITHZzVEo2eWd3K1xuOTZlNjE0anhlbTlNSWNxek96NUZ3TW0xaGhvd3M3UDUra1ljYzRzVlB6bjh3VVk0NlpzanM1ZXJUcmI5Qmpjd1xuSCtlVlo2R05NRndYY3hJcDJEVCtGNDlRVVl3WE5vMGdXUEZSMFAwSnB5cDIwWjQxeFNZams3eFdSU3FjTlA2WFxuSk5renpzRzVNT3BJM1B0MW5saEJKQT09XG4tLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tXG4iLAogICJjbGllbnRfZW1haWwiOiAiY2VudHJhbC1pbmZyYUB3YWRlLXByZWZlY3QuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLAogICJjbGllbnRfaWQiOiAiMTEzNTkwNDA1MDM4NDQzMTE2MTUwIiwKICAiYXV0aF91cmkiOiAiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tL28vb2F1dGgyL2F1dGgiLAogICJ0b2tlbl91cmkiOiAiaHR0cHM6Ly9vYXV0aDIuZ29vZ2xlYXBpcy5jb20vdG9rZW4iLAogICJhdXRoX3Byb3ZpZGVyX3g1MDlfY2VydF91cmwiOiAiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vb2F1dGgyL3YxL2NlcnRzIiwKICAiY2xpZW50X3g1MDlfY2VydF91cmwiOiAiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vcm9ib3QvdjEvbWV0YWRhdGEveDUwOS9jZW50cmFsLWluZnJhJTQwd2FkZS1wcmVmZWN0LmlhbS5nc2VydmljZWFjY291bnQuY29tIiwKICAidW5pdmVyc2VfZG9tYWluIjogImdvb2dsZWFwaXMuY29tIgp9Cg==@us-central1-python.pkg.dev/wade-prefect/private-packages/simple/
+  - prefect_docker.deployments.steps.build_docker_image:
+      id: build-image-latest
+      requires: prefect-docker
+      image_name: us-central1-docker.pkg.dev/wade-prefect/prefect-images/prefect-flows/wg-seatgeek
+      tag: latest
+      dockerfile: Dockerfile
+      platform: linux/amd64
+      buildargs:
+        AUTHED_ARTIFACT_REG_URL: https://_json_key_base64:ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAid2FkZS1wcmVmZWN0IiwKICAicHJpdmF0ZV9rZXlfaWQiOiAiZjQyMDVkYmQzYmM3NjgwZDlmOGJhNTFhZmFhOWJiOGZjODQ2ODYwZCIsCiAgInByaXZhdGVfa2V5IjogIi0tLS0tQkVHSU4gUFJJVkFURSBLRVktLS0tLVxuTUlJRXZBSUJBREFOQmdrcWhraUc5dzBCQVFFRkFBU0NCS1l3Z2dTaUFnRUFBb0lCQVFDaENRRTZIUjZpM2d5T1xuMkYyVjJPcXVNdUFxVklWTnAwVCsyUWlpdTVsMDdITXdEdU1Sdmc2NUkya04wMGhQdU91M0xsUjFCNTRaaDZDVVxubVJUVFRBekN4Um5pWXhrbFk3YXFiVk5ZUWFpckt1ZUMwKzlDNnh0UTZmVGtOdjUzN0NsUVI4aC9BM21CdU1JbVxuNU94TFlaODE4WTg0WFJwQVhQdHlPYjZaeFFFb2VucHFWV1RJWHh0dmZMWG5PNlgxYjlVUnczQ2czWGZiRjBZclxuSVQ5TU5NalJ6UkJaMy9ZQ0lqQXdXYy82Q0pHQkMyRVAxWWFHRVhzMFdSSnMwc2Q0Q0hCTnJWTUdqdHk4WUtLc1xuVUxjTm9mSEI5UjQ5V096RzEvZDRaRm9PaFZ0RVNvK2hZZjRjemJpdGVncnZrSThrRDcwdjlBbGVmL0owdkxrOFxuRXM3TEs5YVZBZ01CQUFFQ2dnRUFIdmRtMDRDSEJDV3ovNElPMlFKcCtvNlErY0xnRVhNeGV0cE1aVkt5NnorT1xuMVBaLzVza0g5c1VlN2dncmx4MEZ3dWQzV1R2YVJLbUdrUnl3MndMOFR6WHN5Tkpxb3Z4K1ExNmJrTlNyZFNMZVxuZXhON0pvQ2tjNVpSdjlMdGN5MG9NcVpqSVQyUFQ0a3lXSjFiN1JEOE56alk1Q3RQSVlKZjNmTEp1ck1lQ21UWVxuNnpVUmZVWXRZZGpINTl1MGN5ZlRHOENNL0ZUaXB2WjBVSWNBTXd3NlRWYS85bVhrdlc4VXZlR3FZbHdoeGx5V1xuL2k4b3VtOHFBNlFaRHA3K3ZvblpRZHJKVS91RVdtSWUzVHNaWDRvVDh4NGV3TFNwRG5manRCTHlhSHRHSS8vZFxuUFU2QThFV3RrWVpGT0ZTdjVMVFhHdGdUREJCVG9MbGl2VzhGM0c4Qy93S0JnUURQY3VaaytldXVRSXhoc2o1MFxua0ljeitpbkdpMUJkclVZck13bmMxaFN2RUZHQzhaYTU5b2dITVVCejVBZkNNMXQ1KzRLQ2dBampjVTFpTzJNMVxuM3pzQXRjZGt3cmZTanRJL3MrMmFFdzdnUVgxK3ZINXFGSHYwTXN2Wi90aEtGQjJaTFAxVE5BYVVIZGhkKzBTZ1xuNHhNNVEwQWNwQm85VFJJZGFUNFk0R0hXb3dLQmdRREd1VVpXZ2VMYzRGS1BQc0h1c3FjYzg2Y0VBUVJWRDM4eVxuS3R1OVlpTngrY1VrVFh4RTdRRHVzQUszQ2UvSXphVG42QnZvTzU5aFpaODE1RU9YeUJtMDh3M0ZsUGIvQWZHY1xuMktOVS9ZTEJ4SVFPdVJBRlhEaXZLak15a1NQV1dFT2JlajBTWHNHRTdJSUFndk1WMk0zaEtOWk1HTXZld1gxWFxuUjVFY2w1NUpad0tCZ0NseHRnKzBVbDUwck5jVHlpQjFnMTFoL0JpYldvbnNoUms2VUIwYmMvUnBtUzlFM3F6MlxuVU1USEZTNVIveTdRSGRWbjV2SDFiRkVzSUo2Z2FMaXBpVnNoOWR6dWZkVUdEWUVHakZCOHdEc1RPbVFvZWtUdFxuSkxwcnI0ZzB2cmRGLzRmTGtpeWVOelkrSkN6YWR5S0JXeVRVaDZseEs0RFZ0ZW5FVGRDZ2UwdHJBb0dBREZCY1xud0cySi9qL1VQZFlZdEU3VHRpS08vZHVHUmpNUW9hNHdNWnNNTVRyVjhYcnZzV0d5UmhnWUF2bVZweTYvQWpQS1xuenVncTV5RWg3WGY0akVZMCtaWjZDdjFCRk9vczY1Z3MvczQ2dFFFVlljZ3I2dmtjOWhXNldHN1A5cTgvZVRub1xuNE9PSVFGRmJlT2FrWTMwc3ZNQUlEMjBWN1BhMmFwc2ZyZExqVnc4Q2dZQmdPdlFMbFdmeG1ITHZzVEo2eWd3K1xuOTZlNjE0anhlbTlNSWNxek96NUZ3TW0xaGhvd3M3UDUra1ljYzRzVlB6bjh3VVk0NlpzanM1ZXJUcmI5Qmpjd1xuSCtlVlo2R05NRndYY3hJcDJEVCtGNDlRVVl3WE5vMGdXUEZSMFAwSnB5cDIwWjQxeFNZams3eFdSU3FjTlA2WFxuSk5renpzRzVNT3BJM1B0MW5saEJKQT09XG4tLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tXG4iLAogICJjbGllbnRfZW1haWwiOiAiY2VudHJhbC1pbmZyYUB3YWRlLXByZWZlY3QuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLAogICJjbGllbnRfaWQiOiAiMTEzNTkwNDA1MDM4NDQzMTE2MTUwIiwKICAiYXV0aF91cmkiOiAiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tL28vb2F1dGgyL2F1dGgiLAogICJ0b2tlbl91cmkiOiAiaHR0cHM6Ly9vYXV0aDIuZ29vZ2xlYXBpcy5jb20vdG9rZW4iLAogICJhdXRoX3Byb3ZpZGVyX3g1MDlfY2VydF91cmwiOiAiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vb2F1dGgyL3YxL2NlcnRzIiwKICAiY2xpZW50X3g1MDlfY2VydF91cmwiOiAiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vcm9ib3QvdjEvbWV0YWRhdGEveDUwOS9jZW50cmFsLWluZnJhJTQwd2FkZS1wcmVmZWN0LmlhbS5nc2VydmljZWFjY291bnQuY29tIiwKICAidW5pdmVyc2VfZG9tYWluIjogImdvb2dsZWFwaXMuY29tIgp9Cg==@us-central1-python.pkg.dev/wade-prefect/private-packages/simple/
 push:
-
-# pull section allows you to provide instructions for cloning this project in remote locations
+  - prefect_docker.deployments.steps.push_docker_image:
+      requires: prefect-docker
+      image_name: "{{build-image.image_name}}"
+      tag: "{{ build-image.tag }}"
+  - prefect_docker.deployments.steps.push_docker_image:
+      requires: prefect-docker
+      image_name: "{{build-image.image_name}}"
+      tag: latest
 pull:
-
-# the deployments section allows you to provide configuration for deploying flows
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/WGlaser/wg-seatgeek.git
+      branch: main
+      credentials: "{{ prefect.blocks.github-credentials.wg-github-credentials }}"
 deployments:
+- name: wg-seatgeek-celtics
+  tags: [seatgeek, celtics]
+  entrypoint: wg_seatgeek/wg_seatgeek.py:wg_seatgeek
+  parameters:
+    team: Boston-Celtics
+  work_pool: *central-push-pool
+
+- name: wg-seatgeek-nuggets
+  tags: [seatgeek, nuggets]
+  entrypoint: wg_seatgeek/wg_seatgeek.py:wg_seatgeek
+  parameters:
+    team: Denver-Nuggets
+  work_pool: *central-push-pool
