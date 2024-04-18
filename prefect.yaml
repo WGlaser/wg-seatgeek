@@ -28,7 +28,7 @@ definitions:
           dockerfile: Dockerfile
           platform: linux/amd64
           buildargs:
-            AUTHED_ARTIFACT_REG_URL: https://_json_key_base64:{{ $CENTRAL_INFRA_SA_JSON_64 }}@us-central1-python.pkg.dev/wade-prefect/private-packages/simple/
+            AUTHED_ARTIFACT_REG_URL: https://_json_key_base64:{{ $secrets.CENTRAL_INFRA_SA_JSON_64 }}@us-central1-python.pkg.dev/wade-prefect/private-packages/simple/
     push:
       - prefect_docker.deployments.steps.push_docker_image:
           requires: prefect-docker
@@ -44,14 +44,22 @@ definitions:
           branch: main
           credentials: "{{ prefect.blocks.github-credentials.wg-github-credentials }}"
   deployments:
-    - name: wg-seatgeek
-      tags: [seatgeek]
-      entrypoint: wg_seatgeek/wg_seatseek.py:wg_seatgeek
-      parameters:
-        team: Boston-Celtics
-      work_pool: *central-push-pool
+  - name: wg-seatgeek-celtics
+    tags: [seatgeek, celtics]
+    entrypoint: wg_seatgeek/wg_seatseek.py:wg_seatgeek
+    parameters:
+      team: Boston-Celtics
+    work_pool: *central-push-pool
 
-name: wg-seatgeek
+  - name: wg-seatgeek-nuggets
+    tags: [seatgeek, nuggets]
+    entrypoint: wg_seatgeek/wg_seatseek.py:wg_seatgeek
+    parameters:
+      team: Denver-Nuggets
+    work_pool: *central-push-pool
+
+# Generic metadata about this project
+name: wg_seatgeek
 prefect-version: 2.17
 
 # build section allows you to manage and build docker images
