@@ -28,5 +28,5 @@ jobs:
           PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
           PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
         run: |
-          pip install -r requirements.txt --extra-index-url https://_json_key_base64:${{ secrets.CENTRAL_INFRA_JSON_64 }}@us-central1-python.pkg.dev/landing-zone-231316/private-packages/simple/@us-central1-python.pkg.dev/landing-zone-231316/private-packages/simple/
+          pip install -r requirements.txt --extra-index-url https://_json_key_base64:${{ secrets.CENTRAL_INFRA_JSON_64 }}@us-central1-python.pkg.dev/landing-zone-231316/private-packages/simple/
           python flow.py
