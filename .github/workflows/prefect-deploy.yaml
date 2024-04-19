@@ -29,4 +29,4 @@ jobs:
           PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
         run: |
           pip install -r requirements.txt --extra-index-url ${{ secrets.ARTIFACT_REGISTRY_AUTH_URL }}
-          python flow.py
+          python wg_seatgeek.py
