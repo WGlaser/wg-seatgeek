@@ -5,13 +5,14 @@ from datetime import date
 
 from anyio import run
 from credentials import SeatGeekCredentials
+from google.cloud.bigquery.table import TimePartitioning
 from prefect import flow
 from prefect.variables import Variable
 from prefect_gcp import GcpCredentials
+from prefect_gcp.bigquery import bigquery_load_cloud_storage
 from prefect_gcp.cloud_storage import cloud_storage_upload_blob_from_file
 from seatgeek_client import SeatGeek
-
-# from tasks.bigquery import create_bigquery_dataset
+from tasks.bigquery import create_bigquery_dataset
 from tasks.events import create_event_json_file
 from tasks.gcs import create_gcs_bucket
 
@@ -75,6 +76,21 @@ async def wg_seatgeek(
         bucket=bucket_name,
         blob=f"events/{today:%Y}/{today:%m}/{today:%d}/report.json",
         gcp_credentials=gcp_credentials_block,
+    )
+
+    create_bigquery_dataset(gcp_credentials=gcp_credentials_block, dataset_name=DATASET)
+
+    await bigquery_load_cloud_storage(
+        dataset=DATASET,
+        table=f"events${today:%Y}{today:%m}{today:%d}",
+        uri=f"gs://{bucket_name}/events/{today:%Y}/{today:%m}/{today:%d}/report.json",
+        gcp_credentials=gcp_credentials_block,
+        job_config={
+            "source_format": "NEWLINE_DELIMITED_JSON",
+            "autodetect": True,
+            "write_disposition": "WRITE_TRUNCATE",
+            "time_partitioning": TimePartitioning(type_="DAY"),
+        },
     )
 
 

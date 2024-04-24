@@ -5,6 +5,7 @@ import json
 import math
 from typing import List
 
+from helper_functions import replace_blank_dict
 from prefect import task
 from seatgeek_client import SeatGeek
 
@@ -72,6 +73,10 @@ def create_event_json_file(
         for item in resp["events"]:
             results.append(item)
         on_page += 1
+
+    for item in results:
+        for key, value in item.items():
+            item[key] = replace_blank_dict(value)
 
     with open("event.jsonl", "w") as f:
         for entry in results:
