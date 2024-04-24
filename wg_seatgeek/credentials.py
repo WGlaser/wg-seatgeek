@@ -3,7 +3,7 @@
 from typing import Optional
 
 from prefect.blocks.core import Block
-from pydantic import SecretStr
+from pydantic.v1 import SecretStr
 
 
 class SeatGeekCredentials(Block):
