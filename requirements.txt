@@ -1,4 +1,4 @@
-# install locally with `pip install -vv -U -r requirements.txt --extra-index-url https://us-central1-python.pkg.dev/wade-prefect/private-packages/simple/'
+# install locally with `pip install -U -r requirements.txt --extra-index-url https://us-central1-python.pkg.dev/wade-prefect/private-packages/simple/'
 seatgeek-client
 prefect
 prefect-gcp[bigquery]

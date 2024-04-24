@@ -50,12 +50,6 @@ deployments:
   tags: [seatgeek, celtics]
   entrypoint: wg_seatgeek/wg_seatgeek.py:wg_seatgeek
   parameters:
-    team: Boston-Celtics
-  work_pool: *central-push-pool
-
-- name: wg-seatgeek-nuggets
-  tags: [seatgeek, nuggets]
-  entrypoint: wg_seatgeek/wg_seatgeek.py:wg_seatgeek
-  parameters:
-    team: Denver-Nuggets
+    performer_by_slug: [{"slug": "Boston-Celtics",
+                        "specificity": "home_team"}]
   work_pool: *central-push-pool
