@@ -68,7 +68,7 @@ def create_event_json_file(
             datetime=datetime,
             query=query,
             taxonomies=taxonomies,
-            page=page,
+            page=on_page,
         )
         for item in resp["events"]:
             results.append(item)
