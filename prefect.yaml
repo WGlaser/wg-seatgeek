@@ -21,7 +21,7 @@ build:
       dockerfile: Dockerfile
       platform: linux/amd64
       buildargs:
-        AUTHED_ARTIFACT_REG_URL: ${{  secrets.ARTIFACT_REGISTRY_AUTH_URL  }}
+        AUTHED_ARTIFACT_REG_URL: ${{ secrets.ARTIFACT_REGISTRY_AUTH_URL }}
   - prefect_docker.deployments.steps.build_docker_image:
       id: build-image-latest
       requires: prefect-docker
@@ -30,7 +30,7 @@ build:
       dockerfile: Dockerfile
       platform: linux/amd64
       buildargs:
-        AUTHED_ARTIFACT_REG_URL: ${{  secrets.ARTIFACT_REGISTRY_AUTH_URL  }}
+        AUTHED_ARTIFACT_REG_URL: ${{ secrets.ARTIFACT_REGISTRY_AUTH_URL }}
 push:
   - prefect_docker.deployments.steps.push_docker_image:
       requires: prefect-docker
@@ -47,7 +47,7 @@ pull:
       credentials: "{{ prefect.blocks.github-credentials.wg-github-credentials }}"
 deployments:
 - name: wg-seatgeek-celtics
-  tags: [seatgeek, celtics]
+  tags: [seatgeek, celtics, home_team]
   schedule:
     cron: 0 6 * * *
     timezone: America/New_York
