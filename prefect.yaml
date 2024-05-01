@@ -55,4 +55,5 @@ deployments:
   parameters:
     performer_by_slug: [{"slug": "Boston-Celtics",
                         "specificity": "home_team"}]
+    run_dbt: True
   work_pool: *central-push-pool

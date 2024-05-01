@@ -7,6 +7,7 @@ from anyio import run
 from credentials import SeatGeekCredentials
 from google.cloud.bigquery.table import TimePartitioning
 from prefect import flow
+from prefect.deployments import run_deployment
 from prefect.variables import Variable
 from prefect_gcp import GcpCredentials
 from prefect_gcp.bigquery import bigquery_load_cloud_storage
@@ -29,6 +30,7 @@ async def wg_seatgeek(
     datetime: dict | None = None,
     query: str | None = None,
     taxonomies: list[dict] | None = None,
+    run_dbt: bool = False,
 ) -> None:
     """_summary_
 
@@ -91,6 +93,9 @@ async def wg_seatgeek(
             "time_partitioning": TimePartitioning(type_="DAY"),
         },
     )
+
+    if run_dbt:
+        await run_deployment(name="lz-dbt/seatgeek", timeout=0)
 
 
 if __name__ == "__main__":
