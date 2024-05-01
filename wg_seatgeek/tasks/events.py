@@ -78,6 +78,12 @@ def create_event_json_file(
         for key, value in item.items():
             item[key] = replace_blank_dict(value)
 
+    delete_keys = ["playoffs", "contingent", "home_game_number", "game_number"]
+    for item in results:
+        for bad_key in delete_keys:
+            if bad_key in item:
+                item.pop(bad_key)
+
     with open("event.jsonl", "w") as f:
         for entry in results:
             json.dump(entry, f)
