@@ -43,7 +43,6 @@ async def wg_seatgeek(
         taxonomies (List[dict[int, str, int]] | None, optional): _description_. Defaults to None. # noqa
     """
     text = await Variable.get("gcp_block_name")
-    print(text.value)
     gcp_credentials_block: GcpCredentials = await GcpCredentials.load(text.value)
     seatgeek_credentials_block: SeatGeekCredentials = await SeatGeekCredentials.load(
         "seatgeek-credentials"
