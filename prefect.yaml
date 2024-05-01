@@ -48,6 +48,9 @@ pull:
 deployments:
 - name: wg-seatgeek-celtics
   tags: [seatgeek, celtics]
+  schedule:
+    cron: 0 6 * * *
+    timezone: America/New_York
   entrypoint: wg_seatgeek/wg_seatgeek.py:wg_seatgeek
   parameters:
     performer_by_slug: [{"slug": "Boston-Celtics",
